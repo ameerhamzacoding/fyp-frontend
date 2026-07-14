@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api', // Points directly to your Express engine endpoints
+  baseURL: `${import.meta.env.VITE_API_URL}/api`,
 });
 
 // This automatically attaches your secure JWT session token to headers if a user is logged in
