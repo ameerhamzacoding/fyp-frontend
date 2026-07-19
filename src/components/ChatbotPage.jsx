@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 
-// 🚀 Changed function name to ChatbotPage to match your App.jsx routing requirements
-export default function ChatbotPage() {
+// 🚀 Explicitly exported as a named function to satisfy your App.jsx import requirements
+export function ChatbotPage() {
   // State to handle ongoing message history logs
   const [messages, setMessages] = useState([
     { id: 1, sender: "bot", text: "Hello! Ask me anything about skills, jobs, or guidance!" }
@@ -28,7 +28,7 @@ export default function ChatbotPage() {
     setLoading(true);
 
     try {
-      // 🚀 Targets your live backend router route:
+      // Targets your live backend router route:
       const response = await axios.post("http://localhost:5000/api/chat", { 
         message: userQuery 
       });
