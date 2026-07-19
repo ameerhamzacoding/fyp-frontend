@@ -1,96 +1,85 @@
-import React, { useState, useRef, useEffect } from 'react';
-import API from '../api/axiosInstance';
-import { Send, Bot } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
 
-export function ChatbotPage() {
+export default function Chatbot() {
+  // State to handle ongoing message history logs
   const [messages, setMessages] = useState([
-    { sender: 'bot', text: 'Hello! I am your AI Career Assistant. Ask me anything about skill development or matching market demands.' }
+    { id: 1, sender: "bot", text: "Hello! Ask me anything about skills, jobs, or guidance!" }
   ]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const chatEndRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
+  // Auto-scroll to the bottom of the chat view when a new bubble appears
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const userMsg = { sender: 'user', text: input };
-    setMessages((prev) => [...prev, userMsg]);
-    const currentInput = input;
-    setInput('');
+    const userMessage = { id: Date.now(), sender: "user", text: input };
+    setMessages((prev) => [...prev, userMessage]);
+    
+    const userQuery = input;
+    setInput("");
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      
-      const res = await API.post('/chatbot', 
-        { message: currentInput },
-        { headers: { 'x-auth-token': token } }
-      );
-      
-      setMessages((prev) => [...prev, { sender: 'bot', text: res.data.response }]);
-    } catch (err) {
-      console.error("Chatbot connection error details:", err);
-      setMessages((prev) => [...prev, { sender: 'bot', text: 'Sorry, I am having trouble connecting right now.' }]);
+      // 🚀 Targets your newly active backend router route perfectly:
+      const response = await axios.post("http://localhost:5000/api/chat", { 
+        message: userQuery 
+      });
+
+      setMessages((prev) => [
+        ...prev, 
+        { id: Date.now() + 1, sender: "bot", text: response.data.reply }
+      ]);
+    } catch (error) {
+      console.error("Chatbot frontend link error:", error);
+      setMessages((prev) => [
+        ...prev, 
+        { id: Date.now() + 1, sender: "bot", text: "Oops! Couldn't connect to the counseling server." }
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    /* ✂️ REMOVED: Outer flex container layouts and the local sidebar block entirely */
-    <div className="flex flex-col h-screen bg-slate-50 w-full">
-      
-      {/* Structural Title Frame */}
-      <div className="p-8 border-b border-slate-200 bg-white shrink-0">
-        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-          <Bot className="text-indigo-600 h-6 w-6" /> AI Career Counselor
-        </h1>
-        <p className="text-slate-400 text-xs mt-0.5">Ask questions or receive personalized path recommendations.</p>
+    <div className="flex flex-col h-[480px] w-full max-w-md mx-auto bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden mt-4">
+      <div className="bg-slate-900 text-white p-3.5 font-semibold text-center tracking-wide">
+        🤖 AI Career Assistant
       </div>
-
-      {/* Message Scrolling Body */}
-      <div className="flex-1 p-8 overflow-y-auto space-y-4 max-w-4xl w-full mx-auto">
-        {messages.map((msg, index) => (
-          <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-md p-4 rounded-2xl text-sm ${
-              msg.sender === 'user' 
-                ? 'bg-indigo-600 text-white rounded-br-none shadow-sm shadow-indigo-600/10' 
-                : 'bg-white text-slate-700 border border-slate-200 rounded-bl-none shadow-sm'
+      
+      <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50">
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm leading-relaxed shadow-sm ${
+              msg.sender === "user" ? "bg-blue-600 text-white" : "bg-white text-slate-800 border border-slate-200"
             }`}>
               {msg.text}
             </div>
           </div>
         ))}
-        {loading && (
-          <div className="flex justify-start">
-            <div className="bg-white text-slate-400 border border-slate-200 rounded-2xl rounded-bl-none p-4 text-xs animate-pulse font-medium">
-              AI Counselor is thinking...
-            </div>
-          </div>
-        )}
-        <div ref={chatEndRef} />
+        {loading && <div className="text-xs text-slate-400 italic pl-2 animate-pulse">AI is thinking...</div>}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Messaging Input Tray Area Form */}
-      <div className="p-6 bg-white border-t border-slate-100 sticky bottom-0 shrink-0">
-        <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto flex gap-3">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about jobs abroad, technical certifications, skill paths..."
-            className="flex-1 border border-slate-200 bg-slate-50/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all text-slate-700"
-          />
-          <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-all shadow-md shadow-indigo-600/10">
-            <Send className="h-5 w-5" />
-          </button>
-        </form>
-      </div>
+      <form onSubmit={handleSendMessage} className="p-3 bg-white border-t flex gap-2">
+        <input 
+          type="text" 
+          value={input} 
+          onChange={(e) => setInput(e.target.value)} 
+          placeholder="Type 'how are you' or ask for a recommendation..." 
+          className="flex-1 border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500" 
+          disabled={loading}
+        />
+        <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+          Send
+        </button>
+      </form>
     </div>
   );
 }
