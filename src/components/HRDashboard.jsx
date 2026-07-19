@@ -8,20 +8,21 @@ export function HRDashboard() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🚀 FETCH LIVE JOBS FROM THE DATABASE
-  useEffect(() => {
-    const fetchHRData = async () => {
-      try {
-        const res = await API.get('/jobs'); // Hits our clean GET route
-        if (Array.isArray(res.data)) {
-          setJobs(res.data);
-        }
-      } catch (err) {
-        console.error('Error fetching recruiter database records:', err);
-      } finally {
-        setLoading(false);
+  // 🚀 FETCH LIVE JOBS FROM THE FILTERED BACKEND
+  const fetchHRData = async () => {
+    try {
+      const res = await API.get('/jobs'); // Hits our clean, role-filtered GET route
+      if (Array.isArray(res.data)) {
+        setJobs(res.data);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching recruiter database records:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchHRData();
   }, []);
 
@@ -120,7 +121,7 @@ export function HRDashboard() {
                   </div>
                 </div>
 
-                {/* 🌟 NEW: DYNAMIC LIFE CYCLE STATUS BADGES & TIMELINE */}
+                {/* DYNAMIC LIFE CYCLE STATUS BADGES & TIMELINE */}
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   {job.status === 'Active' || !job.status ? (
                     <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs font-semibold rounded-lg">
@@ -138,7 +139,12 @@ export function HRDashboard() {
                   
                   {job.expiryDate && (
                     <p className="text-[10px] text-slate-400 font-medium mt-0.5">
-                      Ends: {new Date(job.expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      Ends: {(() => {
+                        // Safe UTC formatting parsing to ensure browser calendars look clean
+                        const d = new Date(job.expiryDate);
+                        const utcDate = new Date(d.getTime() + d.getTimezoneOffset() * 60000);
+                        return utcDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      })()}
                     </p>
                   )}
                 </div>
