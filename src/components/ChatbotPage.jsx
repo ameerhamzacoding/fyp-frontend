@@ -28,10 +28,19 @@ export function ChatbotPage() {
     setLoading(true);
 
     try {
-      // Targets your live backend router route:
-      const response = await axios.post("http://localhost:5000/api/chat", { 
-        message: userQuery 
-      });
+      // 🚀 Grab the active JWT token from your login session storage
+      const token = localStorage.getItem("token"); 
+
+      // Targets your live backend router route with the auth header included
+      const response = await axios.post(
+        "http://localhost:5000/api/chat", 
+        { message: userQuery },
+        { 
+          headers: { 
+            "x-auth-token": token // 🚀 Attaches the token so the backend knows exactly who you are
+          } 
+        }
+      );
 
       setMessages((prev) => [
         ...prev, 
