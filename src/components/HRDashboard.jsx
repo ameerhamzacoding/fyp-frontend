@@ -8,12 +8,26 @@ export function HRDashboard() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🚀 FETCH LIVE JOBS FROM THE FILTERED BACKEND
+  // 🚀 FETCH LIVE JOBS WITH DYNAMIC JSON ARRAY CHECKING
   const fetchHRData = async () => {
     try {
-      const res = await API.get('/jobs'); // Hits our clean, role-filtered GET route
+      const res = await API.get('/jobs'); 
+      
+      console.log("🔍 INSPECTING SERVER RESPONSE:", res.data);
+
+      // 🛠️ The JSON Envelope Safe-Unpacker Loop
       if (Array.isArray(res.data)) {
+        // Direct array setup: [...]
         setJobs(res.data);
+      } else if (res.data && Array.isArray(res.data.jobs)) {
+        // Wrapped format type A: { jobs: [...] }
+        setJobs(res.data.jobs);
+      } else if (res.data && Array.isArray(res.data.data)) {
+        // Standard API envelope format type B: { success: true, data: [...] }
+        setJobs(res.data.data);
+      } else {
+        console.warn("⚠️ Response received, but no iterable array field matched:", res.data);
+        setJobs([]);
       }
     } catch (err) {
       console.error('Error fetching recruiter database records:', err);
@@ -51,7 +65,7 @@ export function HRDashboard() {
               <Briefcase className="h-6 w-6" />
             </div>
             <div>
-              {/* Dynamic Count from Database array */}
+              {/* Dynamic Count from structural array state length */}
               <span className="text-2xl font-bold block">{jobs.length}</span>
               <span className="text-xs text-indigo-200 font-medium uppercase tracking-wider">Active Jobs</span>
             </div>
@@ -140,7 +154,6 @@ export function HRDashboard() {
                   {job.expiryDate && (
                     <p className="text-[10px] text-slate-400 font-medium mt-0.5">
                       Ends: {(() => {
-                        // Safe UTC formatting parsing to ensure browser calendars look clean
                         const d = new Date(job.expiryDate);
                         const utcDate = new Date(d.getTime() + d.getTimezoneOffset() * 60000);
                         return utcDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
